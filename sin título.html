@@ -1,0 +1,101 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gato Laberinto Difícil Básico</title>
+    <style>
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; touch-action: none; }
+        .titulo { font-size: 24px; font-weight: bold; color: #e74c3c; margin-bottom: 10px; text-align: center; }
+        canvas { background: #1a1a1a; width: 350px; height: 350px; touch-action: none; display: block; }
+        .hud { font-size: 16px; color: #f1c40f; margin-bottom: 5px; }
+        .menu { position: absolute; background: rgba(0,0,0,0.95); padding: 20px; border-radius: 10px; text-align: center; width: 80%; }
+        button { padding: 15px; font-size: 16px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #victory, #credits { display: none; margin-top: 10px; }
+        .nombre { color: #f1c40f; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="titulo">Gato Laberinto Difícil Básico</div>
+    <div class="hud">Nivel: <span id="levelDisplay">1</span>/500 | 💰 Plata: <span id="money">0</span></div>
+    <div id="ui" class="menu">
+        <div id="victory">¡GANASTE EL JUEGO!</div>
+        <div id="credits">
+            <p>Créditos Finales:</p>
+            <p class="nombre">Gemini, Greylibette Salazar, y Oswin Añez</p>
+            <p>¡Gracias por jugar, campeón!</p>
+        </div>
+        <button id="startBtn" onclick="startGame()">¡JUGAR!</button>
+    </div>
+    <canvas id="canvas" width="400" height="400"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let level = 1, money = 0, gameStarted = false;
+        let p = {x: 50, y: 50, size: 25}, food = {x: 350, y: 350}, walls = [];
+        let canAdvance = true; // Control para no saltar niveles
+
+        function genLevel() {
+            walls = [];
+            for(let i = 0; i < 5; i++) {
+                walls.push({ x: Math.random() * 300, y: Math.random() * 300, w: 50, h: 50 });
+            }
+            canAdvance = true; // Habilita el avance al generar nuevo nivel
+        }
+
+        function startGame() {
+            gameStarted = true;
+            document.getElementById('startBtn').style.display = 'none';
+            genLevel();
+            requestAnimationFrame(draw);
+        }
+
+        function draw() {
+            if (!gameStarted) return;
+            ctx.clearRect(0, 0, 400, 400);
+
+            ctx.fillStyle = "#e74c3c";
+            walls.forEach(w => {
+                ctx.fillRect(w.x, w.y, w.w, w.h);
+                if (p.x < w.x + w.w && p.x + p.size > w.x && p.y < w.y + w.h && p.y + p.size > w.y) {
+                    p.x = 50; p.y = 50;
+                }
+            });
+
+            ctx.font = "30px Arial";
+            ctx.fillText('🐟', food.x, food.y);
+            ctx.fillText('🐱', p.x, p.y);
+
+            // Verificar si toca comida Y si puede avanzar (para evitar saltos)
+            if (canAdvance && Math.abs(p.x - food.x) < 30 && Math.abs(p.y - food.y) < 30) {
+                canAdvance = false; // Bloquea avance hasta que el jugador se aleje o reinicie
+                if (level >= 500) {
+                    gameStarted = false;
+                    document.getElementById('victory').style.display = 'block';
+                    document.getElementById('credits').style.display = 'block';
+                    document.getElementById('ui').style.display = 'block';
+                } else {
+                    level++;
+                    money += 10;
+                    document.getElementById('levelDisplay').innerText = level;
+                    document.getElementById('money').innerText = money;
+                    p.x = 50; p.y = 50;
+                    setTimeout(genLevel, 500); // Pequeña pausa para evitar errores
+                }
+            }
+            if(gameStarted) requestAnimationFrame(draw);
+        }
+
+        canvas.addEventListener('touchmove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            p.x = (e.touches[0].clientX - rect.left) * (400 / rect.width) - 10;
+            p.y = (e.touches[0].clientY - rect.top) * (400 / rect.height) - 10;
+            e.preventDefault();
+        }, {passive: false});
+    </script>
+</body>
+</html>
+
+```
